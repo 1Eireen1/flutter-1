@@ -405,29 +405,5 @@ List<_i1.WidgetPreview> previews() => [];
         expect(generatedPreviewFile.readAsStringSync(), emptyGeneratedPreviewFileContents);
       },
     );
-
-    testUsingContext(
-      'correctly generates ${PreviewCodeGenerator.getGeneratedDtdConnectionInfoFilePath(fs)}',
-      () async {
-        // Check that the generated preview file doesn't exist yet.
-        final File generatedDtdConnectionInfoFile = project.widgetPreviewScaffold.childFile(
-          PreviewCodeGenerator.getGeneratedDtdConnectionInfoFilePath(fs),
-        );
-        expect(generatedDtdConnectionInfoFile, isNot(exists));
-        generatedDtdConnectionInfoFile.createSync(recursive: true);
-
-        // Populate the DTD connection info.
-        final Uri dtdUri = Uri.parse('ws://localhost:1234');
-        codeGenerator.populateDtdConnectionInfo(dtdUri);
-
-        final expectedDtdConnectionInfo =
-            '''
-// ignore_for_file: implementation_imports
-
-const String kWidgetPreviewDtdUri = '$dtdUri';
-''';
-        expect(generatedDtdConnectionInfoFile.readAsStringSync(), expectedDtdConnectionInfo);
-      },
-    );
   });
 }

@@ -577,7 +577,7 @@ void main() {
           '\n'
           'An error was encountered when trying to run git.\n'
           "Please ensure git is installed and available in your system's search path. "
-          'See https://docs.flutter.dev/get-started/install for instructions on installing git for your platform.\n',
+          'See https://docs.flutter.dev/get-started for instructions on installing git for your platform.\n',
         );
       },
       overrides: <Type, Generator>{
@@ -607,7 +607,7 @@ void main() {
           '\n'
           'An error was encountered when trying to run git.\n'
           "Please ensure git is installed and available in your system's search path. "
-          'See https://docs.flutter.dev/get-started/install for instructions on installing git for your platform.\n',
+          'See https://docs.flutter.dev/get-started for instructions on installing git for your platform.\n',
         );
       },
       overrides: <Type, Generator>{
@@ -876,34 +876,6 @@ class CrashingFlutterCommand extends FlutterCommand {
 
     await completer.future;
     _completer!.complete();
-
-    return FlutterCommandResult.success();
-  }
-}
-
-class MultipleExceptionCrashingFlutterCommand extends FlutterCommand {
-  final _completer = Completer<void>();
-
-  @override
-  String get description => '';
-
-  @override
-  String get name => 'crash';
-
-  Future<void> get doneThrowing => _completer.future;
-
-  var exceptionCount = 0;
-
-  @override
-  Future<FlutterCommandResult> runCommand() async {
-    Timer.periodic(const Duration(milliseconds: 10), (timer) {
-      exceptionCount++;
-      if (exceptionCount < 5) {
-        throw Exception('ERROR: $exceptionCount');
-      }
-      timer.cancel();
-      _completer.complete();
-    });
 
     return FlutterCommandResult.success();
   }

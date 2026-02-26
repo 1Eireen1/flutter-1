@@ -249,14 +249,14 @@ class AssembleCommand extends FlutterCommand {
       output = globals.fs.path.join(_flutterProject.directory.path, output);
     }
     final Artifacts artifacts = globals.artifacts!;
-    return Environment(
+    final result = Environment(
       outputDir: globals.fs.directory(output),
       buildDir: _flutterProject.directory
           .childDirectory('.dart_tool')
           .childDirectory('flutter_build'),
       projectDir: _flutterProject.directory,
       packageConfigPath: packageConfigPath(),
-      defines: _parseDefines([...stringsArg('define'), ...stringsArg('dart-define')]),
+      defines: _parseDefines([...stringsArg('define'), ...decodedDefines]),
       inputs: _parseDefines(stringsArg('input')),
       cacheDir: globals.cache.getRoot(),
       flutterRootDir: globals.fs.directory(Cache.flutterRoot),
@@ -323,15 +323,6 @@ class AssembleCommand extends FlutterCommand {
       }
     }
     Target? target;
-    List<String> decodedDefines;
-    try {
-      decodedDefines = decodeDartDefines(_environment.defines, kDartDefines);
-    } on FormatException {
-      throwToolExit(
-        'Error parsing assemble command: your generated configuration may be out of date. '
-        "Try re-running 'flutter build ios' or the appropriate build command.",
-      );
-    }
     if (deferredTargets.isNotEmpty) {
       // Record to analytics that DeferredComponents is being used.
       globals.analytics.send(
@@ -343,7 +334,7 @@ class AssembleCommand extends FlutterCommand {
       );
     }
     if (_flutterProject.manifest.deferredComponents != null &&
-        decodedDefines.contains('validate-deferred-components=true') &&
+        _environment.defines['validate-deferred-components'] == 'true' &&
         deferredTargets.isNotEmpty &&
         !isDebug()) {
       // Add deferred components validation target that require loading units.

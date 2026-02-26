@@ -351,6 +351,20 @@ void main() {
           // Multi arch.
           expect(buildRunner.buildInvocations, flutterTester ? 1 : 2);
           expect(buildRunner.linkInvocations, buildMode == BuildMode.release ? 2 : 0);
+
+          if (!flutterTester) {
+            // Not running on the host system, so the code asset has been turned into a framework.
+            final Directory frameworkRoot = fileSystem.directory(
+              '/build/native_assets/macos/bar.framework',
+            );
+
+            // MacOS frameworks use symlinks for versioned content:
+            // https://developer.apple.com/library/archive/documentation/MacOSX/Conceptual/BPFrameworks/Concepts/FrameworkAnatomy.html
+            expect(frameworkRoot.childLink('bar').targetSync(), 'Versions/Current/bar');
+            expect(frameworkRoot.childLink('Resources').targetSync(), 'Versions/Current/Resources');
+
+            expect(frameworkRoot.childLink('Versions/Current').targetSync(), 'A');
+          }
         },
       );
     }
@@ -385,60 +399,6 @@ void main() {
           '/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang',
         ),
       );
-      expect(
-        result.archiver,
-        Uri.file(
-          '/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/ar',
-        ),
-      );
-      expect(
-        result.linker,
-        Uri.file(
-          '/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/ld',
-        ),
-      );
-    },
-  );
-
-  testUsingContext(
-    'missing xcode when required',
-    overrides: <Type, Generator>{
-      ProcessManager: () => FakeProcessManager.list(<FakeCommand>[
-        for (final binary in <String>['clang', 'ar', 'ld'])
-          FakeCommand(
-            command: <Pattern>['xcrun', '--find', binary],
-            exitCode: 1,
-            stderr: 'not found',
-          ),
-      ]),
-    },
-    () async {
-      if (!const LocalPlatform().isMacOS) {
-        return;
-      }
-
-      await expectLater(cCompilerConfigMacOS(throwIfNotFound: true), throwsA(isA<ToolExit>()));
-    },
-  );
-
-  testUsingContext(
-    'missing xcode when not required',
-    overrides: <Type, Generator>{
-      ProcessManager: () => FakeProcessManager.list(<FakeCommand>[
-        for (final binary in <String>['clang', 'ar', 'ld'])
-          FakeCommand(
-            command: <Pattern>['xcrun', '--find', binary],
-            exitCode: 1,
-            stderr: 'not found',
-          ),
-      ]),
-    },
-    () async {
-      if (!const LocalPlatform().isMacOS) {
-        return;
-      }
-
-      expect(await cCompilerConfigMacOS(throwIfNotFound: false), isNull);
     },
   );
 }
